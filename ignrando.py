@@ -1,31 +1,8 @@
 import requests
-import openpyxl
-from bs4 import BeautifulSoup
 
 
-all_url = "https://ignrando.fr/cirkwi-server/inc/ajax/carte/solrCluster.php?mb_ajax=&bounds%5B%5D=39.095963&bounds%5B%5D=-15.073242&bounds%5B%5D=53.852527&bounds%5B%5D=20.083008&zoom=5&type=parcours"
 
-url_template = "https://ignrando.fr/cirkwi-server/inc/ajax/carte/solrCluster.php?mb_ajax=&bounds%5B%5D={lat}&bounds%5B%5D={lng}&bounds%5B%5D={lat}&bounds%5B%5D={lng}&zoom=12&type=parcours"
-
-forward_url = "https://ignrando.fr/fr/cirkwi/proxy/forward/"
-
-payload = {
-    "json": {"url": "/inc/ajax/accueil/recherche/infobulle_consultation.php",
-             "json": {"id": 329127, "langue": "fr_FR", "type": "parcours"}}
-}
-
-ligne_payload = {
-    "json": {"url": "/inc/ajax/carte/trace.php", "json": {"id": 603936}}
-}
-
-xlsfile = openpyxl.Workbook()
-
-sheet = xlsfile.worksheets[0]
-
-sheet['A1'].value = "Name"
-sheet['B1'].value = "Information"
-sheet['C1'].value = "Coordinates"
-sheet['D1'].value = "Route"
+url_fist = "https://ignrando.fr/cirkwi-server/inc/ajax/carte/solrCluster.php?mb_ajax=&bounds%5B%5D=44.703802&bounds%5B%5D=2.958069&bounds%5B%5D=46.504064&bounds%5B%5D=8.231506&zoom=15&type=parcours"
 
 headers = {
     'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
@@ -37,38 +14,7 @@ headers = {
     'Cookie': 'frontend=40a7fa281c264c268b7a5841675366b3'
 }
 
-res = requests.get(
-    "https://ignrando.fr/cirkwi-server/inc/ajax/carte/solrCluster.php?mb_ajax=&bounds%5B%5D=46.637651&bounds%5B%5D=1.672668&bounds%5B%5D=46.869111&bounds%5B%5D=2.221985&zoom=11&type=parcours")
+res = requests.get(url_fist)
 if res.ok:
     data = res.json()
-    i = 2
-    for dt in data['data']:
-        payload = {
-            'json': '{"url":"/inc/ajax/accueil/recherche/infobulle_consultation.php","json":{"id":' + str(
-                dt['id_objet']) + ',"langue":"fr_FR","type":"parcours"}}'}
-
-        res = requests.post(forward_url, data=payload, headers=headers)
-        if res.ok:
-            per = res.json()
-            lng = dt['lng']
-            lat = dt['lat']
-            soup = BeautifulSoup(per['result']['html'], 'html.parser')
-            h3 = soup.find('h3', attrs={'class': 'cdf_VignetteTitle'})
-            name = h3.find('a', attrs={'class': 'cdf_VignetteTitleLink'}).text
-            cords = f"lat:{lat}, lng:{lng}"
-
-            p_rout = {
-                'json': '{"url":"/inc/ajax/carte/trace.php","json":{"id":' + str(dt['id_parcours']) + '}}'}
-            res = requests.post(url=forward_url, headers=headers, data=p_rout)
-            route = "[]"
-            if res.ok:
-                ccc = res.json()
-                route = ccc['result']
-            sheet[f'A{i}'].value = name
-            sheet[f'B{i}'].value = ""
-            sheet[f'C{i}'].value = cords
-            sheet[f'D{i}'].value = route
-
-            i += 1
-
-xlsfile.save("report1100-.xlsx")
+    print(len(data['data']))
